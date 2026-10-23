@@ -15,18 +15,19 @@ Five Actions
 5. Raise an UnavailableError when any requested night is unavailable.
 
 Step 2: Create a Decision Table
-Use T for true, F for false, - when the condition does not affect the result, and X when an action occurs.
-Conditions and Actions	Rule 1	Rule 2	Rule 3	Rule 4	Rule 5	Rule 6
-Dates are valid	T	T	T	F	T	T
-Number of nights is valid	T	T	T	-	F	T
-Number of guests is valid	T	T	T	-	-	T
-Requested nights are available	T	T	F	-	-	T
-More than five guests	F	T	-	-	-	-
-Create reservation	X	X				X
-Calculate standard price	X	X				X
-Add extra guest fee		X				
-Raise ValueError				X	X	
-Raise UnavailableError			X
+| Condition / Action | R1 | R2 | R3 | R4 | R5 | R6 |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|
+| Valid dates | T | T | T | F | T | T |
+| Valid nights | T | T | T | - | F | T |
+| Valid guests | T | T | T | - | - | F |
+| Nights available | T | T | F | - | - | T |
+| More than 5 guests | F | T | - | - | - | - |
+| Create reservation | X | X | | | | |
+| Calculate price | X | X | | | | |
+| Add guest fee | | X | | | | |
+| Raise ValueError | | | | X | X | X |
+| Raise UnavailableError | | | X | | | |
+
 
 Explanation of the rules:
 - Rule 1: A valid reservation with five or fewer guests is created without an extra guest fee.
@@ -34,7 +35,7 @@ Explanation of the rules:
 - Rule 3: The reservation is rejected because at least one requested night is unavailable.
 - Rule 4: The reservation is rejected because the check-in and checkout dates are invalid.
 - Rule 5: The reservation is rejected because the number of nights is outside the allowed range.
-- Rule 6: A valid reservation with an available date range and a valid number of guests is created. The standard price is calculated.
+- Rule 6: The reservation is rejected because the number of guests is invalid. The maximum allowed is 12 guests, but the test case uses 13 guests, so a ValueError is raised.
 
 Step 3: Create Decision Table Test Cases
 
@@ -116,39 +117,41 @@ Five Events That Change Reservation States
 
 Step 5: Create a State Transition Table
 
-Current State	Event	Expected State	Expected Result
-Pending	Payment succeeds	Confirmed	Reservation is confirmed.
-Pending	Payment fails	Cancelled	Reservation is cancelled and dates are released.
-Pending	Guest cancels	Cancelled	Reservation is cancelled.
-Confirmed	Guest checks in on check-in date	Checked In	Guest is checked in.
-Confirmed	Guest cancels	Cancelled	Reservation is cancelled and dates are released.
-Checked In	Guest checks out	Completed	Reservation is completed.
-Cancelled	Guest attempts to check in	Cancelled	Raise InvalidStateError.
-Completed	Guest attempts to cancel	Completed	Raise InvalidStateError.
-Cancelled	Payment succeeds	Cancelled	Raise InvalidStateError.
-Pending	Guest attempts to check in	Pending	Raise InvalidStateError.
-Completed	Guest attempts to check in	Completed	Raise InvalidStateError.
+
+| Current State | Event | Expected State | Result |
+|---|---|---|---|
+| Pending | Payment succeeds | Confirmed | Reservation confirmed |
+| Pending | Payment fails | Cancelled | Dates released |
+| Pending | Guest cancels | Cancelled | Reservation cancelled |
+| Confirmed | Guest checks in | Checked In | Guest checked in |
+| Confirmed | Guest cancels | Cancelled | Dates released |
+| Checked In | Guest checks out | Completed | Reservation completed |
+| Cancelled | Guest checks in | Cancelled | InvalidStateError |
+| Completed | Guest cancels | Completed | InvalidStateError |
+| Cancelled | Payment succeeds | Cancelled | InvalidStateError |
+| Pending | Guest checks in | Pending | InvalidStateError |
+| Completed | Guest checks in | Completed | InvalidStateError |
+
 
 The table includes six valid transitions and five invalid transitions. For invalid transitions, the reservation remains in its original state and the application raises an InvalidStateError
 
 Step 6: Create State Transition Test Cases
 
-Valid State Transitions
-Test ID	Starting State	Event	Expected State	Expected Result	Type
-ST01	Pending	Payment succeeds	Confirmed	Reservation is confirmed.	Valid
-ST02	Pending	Payment fails	Cancelled	Reservation is cancelled and dates are released.	Valid
-ST03	Pending	Guest cancels	Cancelled	Reservation is cancelled.	Valid
-ST04	Confirmed	Guest checks in on check-in date	Checked In	Guest is checked in.	Valid
-ST05	Confirmed	Guest cancels	Cancelled	Reservation is cancelled.	Valid
-ST06	Checked In	Guest checks out	Completed	Reservation is completed.	Valid
 
-Invalid State Transitions
-Test ID	Starting State	Event	Expected State	Expected Result	Type
-ST07	Cancelled	Guest attempts to check in	Cancelled	Raise InvalidStateError.	Invalid
-ST08	Completed	Guest attempts to cancel	Completed	Raise InvalidStateError.	Invalid
-ST09	Cancelled	Payment succeeds	Cancelled	Raise InvalidStateError.	Invalid
-ST10	Pending	Guest attempts to check in	Pending	Raise InvalidStateError.	Invalid
-ST11	Completed	Guest attempts to check in	Completed	Raise InvalidStateError.	Invalid
+| ID | Starting State | Event | Expected State | Type |
+|---|---|---|---|---|
+| ST01 | Pending | Payment succeeds | Confirmed | Valid |
+| ST02 | Pending | Payment fails | Cancelled | Valid |
+| ST03 | Pending | Guest cancels | Cancelled | Valid |
+| ST04 | Confirmed | Guest checks in | Checked In | Valid |
+| ST05 | Confirmed | Guest cancels | Cancelled | Valid |
+| ST06 | Checked In | Guest checks out | Completed | Valid |
+| ST07 | Cancelled | Guest checks in | Cancelled | Invalid |
+| ST08 | Completed | Guest cancels | Completed | Invalid |
+| ST09 | Cancelled | Payment succeeds | Cancelled | Invalid |
+| ST10 | Pending | Guest checks in | Pending | Invalid |
+| ST11 | Completed | Guest checks in | Completed | Invalid |
+
 
 Complete Reservation Sequence
 Test ID: ST12
